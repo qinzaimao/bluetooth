@@ -16,7 +16,7 @@
 rt_mutex_t timeout_mutex = NULL;
 rt_mutex_t goto_mutex = NULL;
 /*RT_THREAD 变量*/
-
+//
 volatile bool power_connect_flag = false;            // 保存数据标志
 volatile bool goto_home_flag = false;            // 保存数据标志
 
