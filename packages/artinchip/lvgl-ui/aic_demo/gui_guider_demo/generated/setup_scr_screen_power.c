@@ -16,7 +16,7 @@
 #include "D:\new_SDK\bluetouch\luban-lite-master\application\rt-thread\helloworld\main.h"
 
 lv_timer_t *power_timer = NULL;
-static int32_t current_percent = 1;
+static int32_t current_percent = 0;
 
 static void power_callback(lv_timer_t *timer)
 {
