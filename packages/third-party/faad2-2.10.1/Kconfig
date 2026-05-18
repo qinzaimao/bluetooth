@@ -1,0 +1,10 @@
+
+# Kconfig file for package littlefs
+menuconfig LPKG_USING_FAAD2
+    bool "FAAD: FAAD2 is an open source MPEG-4 and MPEG-2 AAC decoder"
+    default n
+
+config LPKG_FAAD_MEM_USING_CMA
+    bool "Enable faad using cma"
+    default n
+    depends on LPKG_USING_FAAD2

@@ -1,0 +1,61 @@
+Import('AIC_ROOT')
+Import('PRJ_KERNEL')
+from building import *
+
+cwd = GetCurrentDir()
+
+src = []
+
+CPPDEFINES = []
+
+
+if GetDepend(['LPKG_USING_FAAD2']):
+    src += Glob('./libfaad/bits.c')
+    src += Glob('./libfaad/cfft.c')
+    src += Glob('./libfaad/decoder.c')
+    src += Glob('./libfaad/drc.c')
+    src += Glob('./libfaad/drm_dec.c')
+    src += Glob('./libfaad/error.c')
+    src += Glob('./libfaad/ic_predict.c')
+    src += Glob('./libfaad/is.c')
+    src += Glob('./libfaad/lt_predict.c')
+    src += Glob('./libfaad/mdct.c')
+    src += Glob('./libfaad/mp4.c')
+    src += Glob('./libfaad/ms.c')
+    src += Glob('./libfaad/output.c')
+    src += Glob('./libfaad/pns.c')
+    src += Glob('./libfaad/ps_dec.c')
+    src += Glob('./libfaad/ps_syntax.c')
+    src += Glob('./libfaad/pulse.c')
+    src += Glob('./libfaad/specrec.c')
+    src += Glob('./libfaad/syntax.c')
+    src += Glob('./libfaad/tns.c')
+    src += Glob('./libfaad/hcr.c')
+    src += Glob('./libfaad/huffman.c')
+    src += Glob('./libfaad/rvlc.c')
+    src += Glob('./libfaad/ssr.c')
+    src += Glob('./libfaad/ssr_fb.c')
+    src += Glob('./libfaad/ssr_ipqf.c')
+    src += Glob('./libfaad/common.c')
+    src += Glob('./libfaad/sbr_dct.c')
+    src += Glob('./libfaad/sbr_e_nf.c')
+    src += Glob('./libfaad/sbr_fbt.c')
+    src += Glob('./libfaad/sbr_hfadj.c')
+    src += Glob('./libfaad/sbr_huff.c')
+    src += Glob('./libfaad/sbr_hfgen.c')
+    src += Glob('./libfaad/sbr_qmf.c')
+    src += Glob('./libfaad/sbr_syntax.c')
+    src += Glob('./libfaad/sbr_tf_grid.c')
+    src += Glob('./libfaad/sbr_dec.c')
+    src += Glob('./libfaad/filtbank.c')
+
+CPPPATH = [cwd,
+           cwd + r'/libfaad/',
+           cwd + r'/libfaad/codebook',
+           cwd + r'/include/']
+
+LOCAL_CCFLAGS = '-fno-strict-aliasing -Werror=maybe-uninitialized'
+
+group = DefineGroup('libfaad2', src, depend = [''], CPPPATH = CPPPATH, CPPDEFINES = CPPDEFINES, LOCAL_CCFLAGS=LOCAL_CCFLAGS)
+
+Return('group')
