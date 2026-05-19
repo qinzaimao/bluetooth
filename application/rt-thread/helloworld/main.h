@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <aic_drv_wdt.h>
 
 #include "lvgl.h"
 #include "gui_guider.h"
@@ -19,6 +20,7 @@
 #include "video.h"
 #include "cfgsave.h"
 #include "music.h"
+#include "wdt.h"
 
 #define CONN(x, y) x#y
 #define LVGL_DIRR "L:" LVGL_STORAGE_PATH "/"

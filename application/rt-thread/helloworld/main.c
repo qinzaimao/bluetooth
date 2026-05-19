@@ -170,6 +170,13 @@ int main(void)
     if (cfgsave_thread != RT_NULL) rt_thread_startup(cfgsave_thread);
 
 
+    // 初始化看门狗
+    if (wdt_init() != RT_EOK)
+        rt_kprintf("[WDT] Init failed, system halted!");
+    else
+        rt_kprintf("wDT init success\n");
+    // 注册空闲钩子（第一层喂狗机制）
+    rt_thread_idle_sethook(idle_hook);
 
     rt_thread_mdelay(1000);
     BLEN_Init();

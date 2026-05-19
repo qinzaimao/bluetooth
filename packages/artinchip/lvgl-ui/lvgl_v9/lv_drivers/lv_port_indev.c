@@ -29,6 +29,7 @@ static void input_read(lv_indev_t *indev_drv, lv_indev_data_t *data)
 
 void aic_touch_inputevent_cb(rt_int16_t x, rt_int16_t y, rt_uint8_t state)
 {
+    static bool power_indev = false;
 #ifdef AIC_BT_BT8858A
 	extern int bt_hid_set_touch_event(int, unsigned short, unsigned short);
 	bt_hid_set_touch_event(state, y, x);
@@ -36,15 +37,22 @@ void aic_touch_inputevent_cb(rt_int16_t x, rt_int16_t y, rt_uint8_t state)
     switch (state)
     {
     case RT_TOUCH_EVENT_UP:
+        if(power_indev) power_indev = false;
         last_state = LV_INDEV_STATE_RELEASED;
         break;
     case RT_TOUCH_EVENT_MOVE:
     case RT_TOUCH_EVENT_DOWN:
         timeout_cnt = 0;
         rt_mutex_take(timeout_mutex, RT_WAITING_FOREVER);
-        if(timeout_state) timeout_state = false; // 触摸事件，退出息屏状态
+        if(timeout_state)
+        {
+            timeout_state = false; // 触摸事件，退出息屏状态
+            rt_mutex_release(timeout_mutex);
+            power_indev  = true;
+            break;
+        }
         rt_mutex_release(timeout_mutex);
-
+        if(power_indev) break;
         rt_mutex_take(goto_mutex, RT_WAITING_FOREVER);
         bool power_connect_temp = power_connect_flag;
         rt_mutex_release(goto_mutex);
