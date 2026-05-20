@@ -31,7 +31,7 @@ static void power_callback(lv_timer_t *timer)
         lv_snprintf(buf, sizeof(buf), "%d%%", current_percent);
         lv_label_set_text(guider_ui.screen_power_label_progress, buf);
     }
-
+    #if POWER_ON_MODE == 1
     // 到100%时停止定时器
     if (current_percent >= 100) {
         power_connect_flag = true;
@@ -47,6 +47,13 @@ static void power_callback(lv_timer_t *timer)
         setup_scr_screen_home(&guider_ui);
         lv_scr_load_anim(guider_ui.screen_home, LV_SCR_LOAD_ANIM_NONE, 0, 0, true);
     }
+    #else
+        if (current_percent >= 100) {
+            lv_timer_del(timer);
+            setup_scr_screen_home(&guider_ui);
+            lv_scr_load_anim(guider_ui.screen_home, LV_SCR_LOAD_ANIM_NONE, 0, 0, true);
+        }
+    #endif
 }
 
 void setup_scr_screen_power(lv_ui *ui)

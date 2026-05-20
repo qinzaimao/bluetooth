@@ -53,16 +53,19 @@ void aic_touch_inputevent_cb(rt_int16_t x, rt_int16_t y, rt_uint8_t state)
         }
         rt_mutex_release(timeout_mutex);
         if(power_indev) break;
-        rt_mutex_take(goto_mutex, RT_WAITING_FOREVER);
-        bool power_connect_temp = power_connect_flag;
-        rt_mutex_release(goto_mutex);
-        if(power_connect_temp)
-        {
+
+        #if POWER_ON_MODE == 1
             rt_mutex_take(goto_mutex, RT_WAITING_FOREVER);
-            goto_home_flag = true;
-            power_connect_flag = false;
+            bool power_connect_temp = power_connect_flag;
             rt_mutex_release(goto_mutex);
-        }
+            if(power_connect_temp)
+            {
+                rt_mutex_take(goto_mutex, RT_WAITING_FOREVER);
+                goto_home_flag = true;
+                power_connect_flag = false;
+                rt_mutex_release(goto_mutex);
+            }
+        #endif
 
         last_x = x;
         last_y = y;

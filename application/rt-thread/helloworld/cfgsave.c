@@ -10,18 +10,20 @@ void cfgSave()
     FILE *cfgfile;
     char buff[save_byte] = {0};
 
-    /* 初始化魔数 */
+    /* char 不要超过127 */
     buff[0] = 0x55;
     buff[1] = 0xAA;
 
     /* 加锁读取全局变量 */
-    rt_mutex_take(cfg_mutex, RT_WAITING_FOREVER);
-    buff[2] = language;
-    buff[3] = light_value;
-    buff[4] = screen_off_mode;
-    buff[5] = home_open_state;
-    buff[6] = home_blue_state;
-    rt_mutex_release(cfg_mutex);
+    if (rt_mutex_take(cfg_mutex, RT_TICK_PER_SECOND / 10) == RT_EOK)
+    {
+        buff[2] = language;
+        buff[3] = light_value;
+        buff[4] = screen_off_mode;
+        buff[5] = home_open_state;
+        buff[6] = home_blue_state;
+        rt_mutex_release(cfg_mutex);
+    }
 
     /* 打开文件 */
     cfgfile = fopen("/data/config.bin", "wb");
@@ -69,13 +71,15 @@ void cfgRead()
     if (bytes_read == save_byte && (buff[0] == 0x55) && (buff[1] == 0xAA))
     {
        /* 加锁写入全局变量 */
-        rt_mutex_take(cfg_mutex, RT_WAITING_FOREVER);
-        language = buff[2];
-        light_value = buff[3];
-        screen_off_mode = buff[4];
-        home_open_state = buff[5];
-        home_blue_state = buff[6];
-        rt_mutex_release(cfg_mutex);
+        if (rt_mutex_take(cfg_mutex, RT_TICK_PER_SECOND / 10) == RT_EOK)
+        {
+            language = buff[2];
+            light_value = buff[3];
+            screen_off_mode = buff[4];
+            home_open_state = buff[5];
+            home_blue_state = buff[6];
+            rt_mutex_release(cfg_mutex);
+        }
 
         rt_kprintf("Config loaded from file\n");
     }
@@ -83,15 +87,18 @@ void cfgRead()
 
 void save_begin(void)
 {
-    rt_mutex_take(cfg_mutex, RT_WAITING_FOREVER);
-    save_flag = true;
-    save_num++;
-    rt_mutex_release(cfg_mutex);
+    if (rt_mutex_take(cfg_mutex, RT_TICK_PER_SECOND / 10) == RT_EOK)      // 等待100ms
+    {
+        save_flag = true;
+        save_num++;
+        rt_mutex_release(cfg_mutex);
+    }
 }
 
 void cfgsave_thread_entry(void *parameter)
 {
-    static uint8_t save_counter = 0, last_save_num = 0;
+    bool save_temp = false;
+    static uint16_t save_counter = 0, last_save_num = 0;
     static bool timeout_logged = false; // 添加标志，确保只记录一次
         /* 初始化互斥锁 */
     cfg_mutex = rt_mutex_create("cfg_mutex", RT_IPC_FLAG_FIFO);
@@ -102,26 +109,32 @@ void cfgsave_thread_entry(void *parameter)
     }
     while (1)
     {
-        rt_mutex_take(cfg_mutex, RT_WAITING_FOREVER);
-        bool save_temp = save_flag;
-        rt_mutex_release(cfg_mutex);
+        if (rt_mutex_take(cfg_mutex, RT_TICK_PER_SECOND / 10) == RT_EOK)
+        {
+            save_temp = save_flag;
+            rt_mutex_release(cfg_mutex);
+        }
         if (save_temp)
         {
             if ((++save_counter) >= 1 && last_save_num == save_num)
             {
                 cfgSave();
-                rt_mutex_take(cfg_mutex, RT_WAITING_FOREVER);
-                save_num = 0;
-                save_counter = 0;
-                save_flag = false;
-                rt_mutex_release(cfg_mutex);
+                if (rt_mutex_take(cfg_mutex, RT_TICK_PER_SECOND / 10) == RT_EOK)
+                {
+                    save_num = 0;
+                    save_counter = 0;
+                    save_flag = false;
+                    rt_mutex_release(cfg_mutex);
+                }
             }
             else if (last_save_num != save_num)
             {
-                rt_mutex_take(cfg_mutex, RT_WAITING_FOREVER);
-                save_counter = 0;
-                last_save_num = save_num;
-                rt_mutex_release(cfg_mutex);
+                if (rt_mutex_take(cfg_mutex, RT_TICK_PER_SECOND / 10) == RT_EOK)
+                {
+                    save_counter = 0;
+                    last_save_num = save_num;
+                    rt_mutex_release(cfg_mutex);
+                }
             }
         }
 
@@ -132,13 +145,25 @@ void cfgsave_thread_entry(void *parameter)
             rt_kprintf("进入息屏状态\n");
         }else if(!timeout_state && timeout_logged)
         {
-            rt_mutex_take(cfg_mutex, RT_WAITING_FOREVER);
-            uint8_t current_light = light_value;
-            rt_mutex_release(cfg_mutex);
+            uint8_t current_light = 0;
 
-            backlight_set(current_light);
-            rt_kprintf("退出息屏状态\n");
-            timeout_logged = false; // 恢复标志，允许下次记录
+            // 只有成功拿到锁，才读取值 + 设置背光
+            if (rt_mutex_take(cfg_mutex, RT_TICK_PER_SECOND / 10) == RT_EOK)
+            {
+                current_light = light_value;
+                rt_mutex_release(cfg_mutex);
+
+                // 只有成功获取到配置，才设置背光 ✅
+                backlight_set(current_light);
+
+                rt_kprintf("退出息屏状态，亮度：%d\n", current_light);
+                timeout_logged = false;
+            }
+            else
+            {
+                // 拿不到锁，本次不处理，下次循环再试
+                rt_kprintf("警告：获取亮度配置失败，下次重试\n");
+            }
         }
 
         rt_thread_mdelay(500);

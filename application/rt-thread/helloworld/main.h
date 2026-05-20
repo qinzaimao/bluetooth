@@ -27,6 +27,8 @@
 #define LVGL_MUSIC_PATH LVGL_STORAGE_PATH"/music/"
 #define MUSIC_PATH(y) CONN(LVGL_MUSIC_PATH, y)
 
+#define POWER_ON_MODE 0      //0 直接跳转， 1等待点击跳转
+
 #define VERSION_NUMBER "3KMLEP-JYMT300-100277"
 #define VERSION_DATE "2026-6-25"
 
