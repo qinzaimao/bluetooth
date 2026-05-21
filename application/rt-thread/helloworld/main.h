@@ -52,6 +52,7 @@ typedef enum{
 /*RT_THREAD 变量*/
 extern rt_mutex_t timeout_mutex;
 extern rt_mutex_t goto_mutex;
+extern rt_mutex_t cfg_mutex;
 /*RT_THREAD 变量*/
 
 extern lv_timer_t *blue_timer;

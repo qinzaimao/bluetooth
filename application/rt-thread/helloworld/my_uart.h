@@ -7,8 +7,7 @@
 
 // 函数声明
 void uart_thread_entry(void *parameter);
-void uart_send_data(uint8_t *data, uint16_t len);
-
+void uart_send_data(const uint8_t *data, uint16_t len);
 
 
 

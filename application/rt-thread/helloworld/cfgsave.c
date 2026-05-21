@@ -2,9 +2,6 @@
 
 volatile uint8_t save_num = 0;
 
-/* 互斥锁：保护所有配置相关的全局变量 */
-static rt_mutex_t cfg_mutex = NULL;
-
 void cfgSave()
 {
     FILE *cfgfile;
@@ -101,12 +98,7 @@ void cfgsave_thread_entry(void *parameter)
     static uint16_t save_counter = 0, last_save_num = 0;
     static bool timeout_logged = false; // 添加标志，确保只记录一次
         /* 初始化互斥锁 */
-    cfg_mutex = rt_mutex_create("cfg_mutex", RT_IPC_FLAG_FIFO);
-    if (cfg_mutex == NULL)
-    {
-        rt_kprintf("cfg_mutex create failed\n");
-        return;
-    }
+
     while (1)
     {
         if (rt_mutex_take(cfg_mutex, RT_TICK_PER_SECOND / 10) == RT_EOK)

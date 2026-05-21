@@ -15,6 +15,7 @@
 /*RT_THREAD 变量*/
 rt_mutex_t timeout_mutex = NULL;
 rt_mutex_t goto_mutex = NULL;
+ rt_mutex_t cfg_mutex = NULL;
 /*RT_THREAD 变量*/
 //
 volatile bool power_connect_flag = false;            // 保存数据标志
@@ -123,12 +124,12 @@ int main(void)
 #ifdef ULOG_USING_FILTER
     ulog_global_filter_lvl_set(ULOG_OUTPUT_LVL);
 #endif
-    cfgRead();
-
-    gpio_fan_pin = rt_pin_get("PB.6");
-    rt_pin_mode(gpio_fan_pin, PIN_MODE_OUTPUT);
-    rt_pin_write(gpio_fan_pin, PIN_LOW);
-
+    cfg_mutex = rt_mutex_create("cfg_mutex", RT_IPC_FLAG_FIFO);
+    if (cfg_mutex == NULL)
+    {
+        rt_kprintf("cfg_mutex create failed\n");
+        return;
+    }
     goto_mutex = rt_mutex_create("goto_mutex", RT_IPC_FLAG_FIFO);
     if (goto_mutex == NULL)
     {
@@ -141,6 +142,13 @@ int main(void)
         rt_kprintf("timeout_mutex create failed\n");
         return;
     }
+    cfgRead();
+
+    gpio_fan_pin = rt_pin_get("PB.6");
+    rt_pin_mode(gpio_fan_pin, PIN_MODE_OUTPUT);
+    rt_pin_write(gpio_fan_pin, PIN_LOW);
+
+
 
     uart_thread = rt_thread_create("uart",            // 线程名字
                                    uart_thread_entry, // 线程入口函数
