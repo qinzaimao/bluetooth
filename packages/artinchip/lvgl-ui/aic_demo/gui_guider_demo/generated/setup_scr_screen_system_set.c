@@ -21,7 +21,6 @@ lv_timer_t *arc_timer = NULL;
 
 
 // 蓝牙状态
-static bool  g_ble_clicked      = false;
 static char  g_reconnect_mac[20] = {0};
 static bool  g_need_reconnect    = false;
 static int   g_retry_count       = 0;
@@ -83,6 +82,7 @@ static void blue_callback(lv_timer_t *timer)
     if (g_ble_connected)
     {
         rt_kprintf("[蓝牙] 连接成功\n");
+        g_retry_count = 0;
         goto_blue = false;
         lv_timer_pause(blue_timer);
         lv_timer_pause(arc_timer);
@@ -100,9 +100,6 @@ static void blue_callback(lv_timer_t *timer)
         return;
     }
 
-    // 点击过连接 → 停止扫描
-    if (g_ble_clicked)
-        return;
 
     // ===================== 显示设备 =====================
     if (g_ble_valid)
@@ -128,7 +125,7 @@ static void blue_connect_btn_cb(lv_event_t *e)
 {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED)
     {
-        g_ble_clicked = true;      // 停止扫描
+
         g_need_reconnect = true;   // 开启重连
 
         // 保存当前设备MAC

@@ -24,9 +24,11 @@ lv_timer_t *blue_state_timer = NULL;
 static void blue_state_callback(lv_timer_t *timer)
 {
     static bool last_state = false;
-    last_state = g_ble_connected;
 
     if(g_ble_connected == last_state) return;
+
+    last_state = g_ble_connected;
+
 
     if(g_ble_connected)
     {
