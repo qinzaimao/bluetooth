@@ -125,7 +125,7 @@ static void blue_connect_btn_cb(lv_event_t *e)
 {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED)
     {
-
+        if(g_ble_connected) return;
         g_need_reconnect = true;   // 开启重连
 
         // 保存当前设备MAC

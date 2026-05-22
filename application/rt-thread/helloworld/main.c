@@ -118,6 +118,7 @@ static rt_thread_t uart_thread = RT_NULL;
 static rt_thread_t video_thread = RT_NULL;
 static rt_thread_t cfgsave_thread = RT_NULL;
 static rt_thread_t music_thread = RT_NULL;
+static rt_thread_t wdt_thread = RT_NULL;
 
 int main(void)
 {
@@ -174,17 +175,15 @@ int main(void)
                                       1024 * 8,             // 线程堆栈大小
                                       20,                   // 线程优先级
                                       20);
+    wdt_thread = rt_thread_create("wdt",            // 线程名字
+                                      wdt_thread_entry, // 线程入口函数
+                                      RT_NULL,              // 线程入口参数
+                                      1024,             // 线程堆栈大小
+                                      10,                   // 线程优先级
+                                      20);
     if (uart_thread != RT_NULL)    rt_thread_startup(uart_thread);
     if (cfgsave_thread != RT_NULL) rt_thread_startup(cfgsave_thread);
-
-
-    // 初始化看门狗
-    if (wdt_init() != RT_EOK)
-        rt_kprintf("[WDT] Init failed, system halted!");
-    else
-        rt_kprintf("wDT init success\n");
-    // 注册空闲钩子（第一层喂狗机制）
-    rt_thread_idle_sethook(idle_hook);
+    if (wdt_thread != RT_NULL) rt_thread_startup(wdt_thread);
 
     rt_thread_mdelay(1000);
     BLEN_Init();
