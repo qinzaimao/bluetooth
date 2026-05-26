@@ -7,7 +7,8 @@
 #define WDT_TIMEOUT 3      // 超时时间30秒（需>喂狗间隔）
 #define WDT_FEED_INTERVAL 1 // 喂狗间隔5秒（需<超时时间）
 
-void wdt_thread_entry(void *parameter);
+int wdt_init(void);
+void idle_hook(void);
 void wdt_immediate_reset(void);
 
 #endif /* __WDT_H__ */
