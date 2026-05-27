@@ -181,10 +181,11 @@ struct aic_pinmux aic_pinmux_config[] = {
 #endif
 #ifdef AIC_USING_PWM1
     //{3, PIN_PULL_DIS, 3, "PC.6"},
-    {3, PIN_PULL_DIS, 3, "PE.12"},
+    // {3, PIN_PULL_DIS, 3, "PE.12"},
 #endif
 #ifdef AIC_USING_AUDIO
 #ifdef AIC_AUDIO_PLAYBACK
+    {1, PIN_PULL_DIS, 3, "PA.4"},
     {5, PIN_PULL_DIS, 3, "PE.12"},
     {1, PIN_PULL_DIS, 3, AIC_AUDIO_PA_ENABLE_GPIO},
 #endif

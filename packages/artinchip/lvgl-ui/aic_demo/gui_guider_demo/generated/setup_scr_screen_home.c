@@ -29,7 +29,6 @@ static void blue_state_callback(lv_timer_t *timer)
 
     last_state = g_ble_connected;
 
-
     if(g_ble_connected)
     {
         if(language == LANGUAGE_CN) lv_label_set_text(guider_ui.screen_home_btn_3_label, "\n已配对       ");
@@ -130,6 +129,7 @@ static void btn_1_event(lv_event_t *e)
 
         if (home_open_state)
         {
+            music_select = (language == LANGUAGE_CN ? MUSIC_START : MUSIC_START_EN);
             data_str = "open";
             // ==================== 关闭 → 开启 ====================
             NO_SHOW(guider_ui.screen_home_line_1);
@@ -183,6 +183,7 @@ static void btn_1_event(lv_event_t *e)
         }
         else
         {
+            music_select = (language == LANGUAGE_CN ? MUSIC_RENEW : MUSIC_RENEW_EN);
             data_str = "close";
             // ==================== 开启 → 关闭 ====================
             SHOW(guider_ui.screen_home_line_1);

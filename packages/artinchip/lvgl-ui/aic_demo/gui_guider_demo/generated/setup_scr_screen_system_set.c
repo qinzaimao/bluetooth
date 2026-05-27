@@ -82,6 +82,7 @@ static void blue_callback(lv_timer_t *timer)
     if (g_ble_connected)
     {
         rt_kprintf("[蓝牙] 连接成功\n");
+        music_select = (language == LANGUAGE_CN ? MUSIC_BLUE : MUSIC_BLUE_EN);
         g_retry_count = 0;
         goto_blue = false;
         lv_timer_pause(blue_timer);

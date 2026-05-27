@@ -42,6 +42,17 @@ typedef struct
 } ble_item_t;
 
 
+typedef enum{
+    MUSIC_NONE= 0,
+    MUSIC_SUN= 1,
+    MUSIC_SUN_EN,
+    MUSIC_BLUE,
+    MUSIC_BLUE_EN,
+    MUSIC_START,
+    MUSIC_START_EN,
+    MUSIC_RENEW,
+    MUSIC_RENEW_EN,
+}MUSIC_T;
 
 typedef enum{
     TIMEOUT_MODE_30sec = 1,
@@ -62,6 +73,7 @@ extern lv_timer_t *blue_state_timer;
 extern ble_item_t g_ble_queue;
 
 extern volatile uint8_t language;
+extern volatile uint8_t music_select;
 extern volatile uint8_t light_value;
 extern volatile uint8_t screen_off_mode;
 extern volatile uint16_t timeout_cnt;

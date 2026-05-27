@@ -21,10 +21,10 @@ static lv_indev_t *indev_touchpad;
 
 static void input_read(lv_indev_t *indev_drv, lv_indev_data_t *data)
 {
-    data->point.x = last_x;
-    data->point.y = last_y;
+    // 最终传给LVGL前再做一次边界保护（双重保险）
+    data->point.x = LV_CLAMP(0, last_x, 479);
+    data->point.y = LV_CLAMP(0, last_y, 479);
     data->state = last_state;
-
 }
 
 void aic_touch_inputevent_cb(rt_int16_t x, rt_int16_t y, rt_uint8_t state)
@@ -43,38 +43,51 @@ void aic_touch_inputevent_cb(rt_int16_t x, rt_int16_t y, rt_uint8_t state)
     case RT_TOUCH_EVENT_MOVE:
     case RT_TOUCH_EVENT_DOWN:
         timeout_cnt = 0;
-        rt_mutex_take(timeout_mutex, RT_WAITING_FOREVER);
-        if(timeout_state)
+        // 改成100ms超时，防止死锁
+        if (rt_mutex_take(timeout_mutex, RT_TICK_PER_SECOND/10) == RT_EOK)
         {
-            timeout_state = false; // 触摸事件，退出息屏状态
+            if(timeout_state)
+            {
+                timeout_state = false; // 触摸事件，退出息屏状态
+                rt_mutex_release(timeout_mutex);
+                power_indev  = true;
+                break;
+            }
             rt_mutex_release(timeout_mutex);
-            power_indev  = true;
-            break;
         }
-        rt_mutex_release(timeout_mutex);
         if(power_indev) break;
 
         #if POWER_ON_MODE == 1
-            rt_mutex_take(goto_mutex, RT_WAITING_FOREVER);
-            bool power_connect_temp = power_connect_flag;
-            rt_mutex_release(goto_mutex);
-            if(power_connect_temp)
+            // 改成100ms超时
+            if (rt_mutex_take(goto_mutex, RT_TICK_PER_SECOND/10) == RT_EOK)
             {
-                rt_mutex_take(goto_mutex, RT_WAITING_FOREVER);
-                goto_home_flag = true;
-                power_connect_flag = false;
+                bool power_connect_temp = power_connect_flag;
                 rt_mutex_release(goto_mutex);
+                if(power_connect_temp)
+                {
+                    if (rt_mutex_take(goto_mutex, RT_TICK_PER_SECOND/10) == RT_EOK)
+                    {
+                        goto_home_flag = true;
+                        power_connect_flag = false;
+                        rt_mutex_release(goto_mutex);
+                    }
+                }
             }
         #endif
 
-        last_x = x;
-        last_y = y;
+        // ====================== 核心修复：坐标边界裁剪 ======================
+        // 480x480屏幕合法坐标范围：0~479
+        last_x = LV_CLAMP(0, x, 479);
+        last_y = LV_CLAMP(0, y, 479);
+        // ==================================================================
+
         last_state = LV_INDEV_STATE_PRESSED;
         break;
 #ifdef AIC_MONKEY_TEST
     case RT_TOUCH_MONKEY_TEST:
-        last_x = x;
-        last_y = y;
+        // 猴子测试也加边界保护
+        last_x = LV_CLAMP(0, x, 479);
+        last_y = LV_CLAMP(0, y, 479);
         last_state = LV_INDEV_STATE_PRESSED;
         break;
 #endif

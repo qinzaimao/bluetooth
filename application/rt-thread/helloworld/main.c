@@ -36,6 +36,7 @@ volatile bool timeout_state = false;
 
 ble_item_t g_ble_queue;
 
+volatile uint8_t music_select = MUSIC_NONE;
 volatile uint8_t language = LANGUAGE_CN;
 volatile uint8_t light_value = 80;
 volatile uint8_t screen_off_mode = TIMEOUT_MODE_30sec;
@@ -143,7 +144,7 @@ int main(void)
         return;
     }
     cfgRead();
-
+    music_select = (language == LANGUAGE_CN ? MUSIC_SUN : MUSIC_SUN_EN);
     gpio_fan_pin = rt_pin_get("PB.6");
     rt_pin_mode(gpio_fan_pin, PIN_MODE_OUTPUT);
     rt_pin_write(gpio_fan_pin, PIN_LOW);
@@ -177,6 +178,7 @@ int main(void)
 
     if (uart_thread != RT_NULL)    rt_thread_startup(uart_thread);
     if (cfgsave_thread != RT_NULL) rt_thread_startup(cfgsave_thread);
+    if (music_thread != RT_NULL) rt_thread_startup(music_thread);
 
     if (wdt_init() != RT_EOK)
         rt_kprintf("[WDT] Init failed, system halted!");

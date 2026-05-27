@@ -16,6 +16,20 @@ struct mini_audio_player *music_audio_player = NULL; // 音乐播放器
 // ====================== 新增：播放触发信号量 ======================
 static rt_sem_t play_sem = NULL;
 
+uint32_t pin_sound = 0;
+uint32_t pin_en = 0;
+
+//只控制视频的声音，不控制系统声音
+void Sound_Init(uint8_t level)
+{
+    pin_sound = rt_pin_get("PE.12");
+    rt_pin_mode(pin_sound, PIN_MODE_OUTPUT);
+    rt_pin_write(pin_sound, level);
+    pin_en = rt_pin_get("PA.4");
+    rt_pin_mode(pin_en, PIN_MODE_OUTPUT);
+    rt_pin_write(pin_en, level);
+}
+
 int music_set_volume(struct mini_audio_player *player, int vol)
 {
     if (vol < 0)
@@ -66,17 +80,35 @@ static void music_create_player(void)
 
 void music_thread_entry(void *parameter)
 {
-    play_sem = rt_sem_create("music_play", 0, RT_IPC_FLAG_FIFO);
-    if(play_sem != NULL ) rt_kprintf("[音乐] 播放触发信号量创建成功\n");
-    else rt_kprintf("[音乐] 播放触发信号量创建失败\n");
-
+    static uint8_t temp = 0;
+    static uint8_t last_music_num = 10;
+    Sound_Init(PIN_HIGH);
+    rt_thread_delay(1000);
+    rt_kprintf("[音乐] 播放器线程启动\n");
+    music_create_player();
+    music_set_volume(music_audio_player, 80);
     while (1)
     {
-        rt_sem_take(play_sem, RT_WAITING_FOREVER);
-        rt_sem_release(play_sem);
+        if(music_select)
+        {
+            if ((mini_audio_player_get_state(music_audio_player) == MINI_AUDIO_PLAYER_STATE_STOPED ||
+            mini_audio_player_get_state(music_audio_player) == MINI_AUDIO_PLAYER_STATE_INIT))
+            {
+                mini_audio_player_play(music_audio_player, music_filename[music_select - 1]);
+                music_select = MUSIC_NONE;
+            }
+        }
 
-        music_create_player();
-        music_set_volume(music_audio_player, 50);
-        mini_audio_player_play(music_audio_player, music_filename[0]);
+
+        // if ((mini_audio_player_get_state(music_audio_player) == MINI_AUDIO_PLAYER_STATE_STOPED ||
+        // mini_audio_player_get_state(music_audio_player) == MINI_AUDIO_PLAYER_STATE_INIT))
+        // {
+        //     temp ++;
+        //     mini_audio_player_play(music_audio_player, music_filename[temp % 8]);
+        // }
+
+
+        rt_thread_delay(200);
+
     }
 }
